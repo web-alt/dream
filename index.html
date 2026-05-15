@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://api.emailjs.com; connect-src 'self' https://api.emailjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Your World</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lavender: #c8b8f0;
+    --soft-pink: #f0c8e0;
+    --moonwhite: #f8f4ff;
+    --skyblue: #b8d8f0;
+    --deep-purple: #6b4fa0;
+    --glow-purple: #a880ff;
+    --glow-pink: #ff80c8;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0d0818;
+    color: var(--moonwhite);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ===== CANVAS BACKGROUND ===== */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ===== AURORA ===== */
+  .aurora {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .aurora-band {
+    position: absolute;
+    width: 200%;
+    height: 60%;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    animation: auroraDrift 14s ease-in-out infinite alternate;
+  }
+  .aurora-band:nth-child(1) {
+    background: radial-gradient(ellipse, #a855f7, #ec4899, transparent);
+    top: -20%; left: -50%;
+    animation-duration: 16s;
+  }
+  .aurora-band:nth-child(2) {
+    background: radial-gradient(ellipse, #6366f1, #8b5cf6, transparent);
+    top: 10%; left: -20%;
+    animation-duration: 20s;
+    animation-delay: -5s;
+    opacity: 0.12;
+  }
+  .aurora-band:nth-child(3) {
+    background: radial-gradient(ellipse, #ec4899, #f472b6, transparent);
+    bottom: -10%; right: -40%;
+    animation-duration: 18s;
+    animation-delay: -8s;
+  }
+  @keyframes auroraDrift {
+    0% { transform: translateX(0) translateY(0) rotate(0deg); }
+    100% { transform: translateX(10%) translateY(5%) rotate(3deg); }
+  }
+
+  /* ===== LOADING SCREEN ===== */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: #0d0818;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loader.hidden { opacity: 0; visibility: hidden; }
+  .loader-orb {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #c084fc, #a855f7);
+    box-shadow: 0 0 40px #a855f740, 0 0 80px #a855f720;
+    animation: loaderPulse 2s ease-in-out infinite;
+  }
+  @keyframes loaderPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px #a855f740, 0 0 80px #a855f720; }
+    50% { transform: scale(1.2); box-shadow: 0 0 60px #a855f780, 0 0 120px #a855f740; }
+  }
+  .loader-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.1em;
+    animation: fadeInOut 2s ease-in-out infinite;
+  }
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  #main { position: relative; z-index: 1; }
+
+  /* ===== SECTION BASE ===== */
+  section {
+    min-height: 100svh;
+    padding: 60px 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ===== HERO ===== */
+  #hero {
+    align-items: center;
+    text-align: center;
+    padding: 80px 28px;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(200,184,240,0.6);
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: slideUp 1s ease 0.5s forwards;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(32px, 9vw, 46px);
+    line-height: 1.25;
+    color: #fff;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: slideUp 1.2s ease 0.8s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    background: linear-gradient(135deg, #c084fc, #f472b6, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-subtitle {
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 48px;
+    font-weight: 300;
+    opacity: 0;
+    animation: slideUp 1.2s ease 1.2s forwards;
+  }
+  .fading-lines {
+    margin-bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .fading-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: rgba(255,255,255,0.35);
+    opacity: 0;
+  }
+  .fading-line:nth-child(1) { animation: fadeIn 1.5s ease 1.8s forwards; }
+  .fading-line:nth-child(2) { animation: fadeIn 1.5s ease 2.4s forwards; }
+  .fading-line:nth-child(3) { animation: fadeIn 1.5s ease 3s forwards; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .enter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 44px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(236,72,153,0.3));
+    border: 1px solid rgba(168,85,247,0.4);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeIn 1.5s ease 3.6s forwards;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(168,85,247,0.2), inset 0 0 20px rgba(255,255,255,0.05);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    -webkit-appearance: none;
+    text-decoration: none;
+  }
+  .enter-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 60px rgba(168,85,247,0.4);
+  }
+  .enter-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .enter-btn:active::before { opacity: 1; }
+  .btn-arrow { font-size: 20px; transition: transform 0.3s; }
+
+  /* ===== SCROLL INDICATOR ===== */
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeIn 2s ease 4.5s forwards;
+  }
+  .scroll-hint span {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+  }
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(168,85,247,0.5), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0% { transform: scaleY(0); transform-origin: top; opacity: 1; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; opacity: 0.3; }
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-num {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(168,85,247,0.6);
+    margin-bottom: 20px;
+    display: block;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(28px, 8vw, 40px);
+    line-height: 1.2;
+    margin-bottom: 28px;
+    color: #fff;
+  }
+  .section-title em {
+    font-style: italic;
+    background: linear-gradient(135deg, #c084fc, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .section-body {
+    font-size: 15px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.55);
+    font-weight: 300;
+  }
+  .section-body p { margin-bottom: 18px; }
+  .section-body p:last-child { margin-bottom: 0; }
+
+  /* ===== DIVIDER ===== */
+  .soft-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(168,85,247,0.5), transparent);
+    margin: 32px 0;
+  }
+
+  /* ===== SECTION 1 — WEIGHT ===== */
+  #weight { background: transparent; }
+  .weight-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    padding: 32px 28px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    margin-top: 16px;
+  }
+  .weight-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.75);
+    border-left: 2px solid rgba(168,85,247,0.5);
+    padding-left: 20px;
+    margin: 24px 0;
+  }
+
+  /* ===== FLOATING ELEMENTS ===== */
+  .float-elements {
+    position: relative;
+    height: 180px;
+    margin: 32px 0;
+    overflow: hidden;
+  }
+  .float-el {
+    position: absolute;
+    font-size: 24px;
+    animation: floatEl 6s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(168,85,247,0.6));
+  }
+  .float-el:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+  .float-el:nth-child(2) { top: 10%; left: 60%; animation-delay: 1.5s; font-size: 18px; }
+  .float-el:nth-child(3) { top: 50%; left: 40%; animation-delay: 3s; font-size: 20px; }
+  .float-el:nth-child(4) { top: 65%; left: 10%; animation-delay: 2s; font-size: 16px; }
+  .float-el:nth-child(5) { top: 30%; left: 80%; animation-delay: 4s; font-size: 22px; }
+  @keyframes floatEl {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    33% { transform: translateY(-12px) rotate(5deg); }
+    66% { transform: translateY(6px) rotate(-3deg); }
+  }
+
+  /* ===== SECTION 3 — QUESTIONS ===== */
+  #questions { padding: 80px 24px; }
+  .question-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .question-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .question-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .question-number {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: rgba(168,85,247,0.6);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .question-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* ===== SECTION 4 — SAFE ===== */
+  #safe {
+    text-align: center;
+    align-items: center;
+  }
+  .safe-orb {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168,85,247,0.3), rgba(236,72,153,0.15), transparent);
+    box-shadow: 0 0 60px rgba(168,85,247,0.3), 0 0 120px rgba(168,85,247,0.1);
+    margin: 0 auto 40px;
+    animation: orbBreath 4s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+  @keyframes orbBreath {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 60px rgba(168,85,247,0.3); }
+    50% { transform: scale(1.08); box-shadow: 0 0 90px rgba(168,85,247,0.5); }
+  }
+  .safe-promises {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .safe-promise {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    backdrop-filter: blur(20px);
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .promise-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ===== JOURNAL ===== */
+  #journal {
+    padding: 60px 24px 80px;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .journal-intro {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .journal-intro .section-title { margin-bottom: 12px; }
+  .journal-intro p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.8;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+  }
+  .journal-container {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 28px;
+    padding: 4px;
+    backdrop-filter: blur(30px);
+    box-shadow:
+      0 0 80px rgba(168,85,247,0.1),
+      0 20px 60px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    animation: journalBreath 5s ease-in-out infinite;
+    transition: box-shadow 0.4s ease;
+  }
+  .journal-container:focus-within {
+    box-shadow:
+      0 0 120px rgba(168,85,247,0.25),
+      0 20px 60px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    border-color: rgba(168,85,247,0.5);
+  }
+  @keyframes journalBreath {
+    0%, 100% { box-shadow: 0 0 80px rgba(168,85,247,0.1), 0 20px 60px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 120px rgba(168,85,247,0.18), 0 20px 60px rgba(0,0,0,0.4); }
+  }
+  .journal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .journal-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.6);
+    animation: dotPulse 3s ease-in-out infinite;
+  }
+  @keyframes dotPulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+  .journal-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(168,85,247,0.6);
+  }
+  .journal-date {
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+  }
+  #dream-text {
+    width: 100%;
+    min-height: 260px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 24px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: rgba(255,255,255,0.85);
+    caret-color: #c084fc;
+    -webkit-appearance: none;
+  }
+  #dream-text::placeholder {
+    color: rgba(255,255,255,0.2);
+    font-style: italic;
+  }
+  .journal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .char-count {
+    font-size: 11px;
+    color: rgba(168,85,247,0.4);
+    letter-spacing: 0.1em;
+  }
+  .journal-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,0.15);
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* ===== SUBMIT BTN ===== */
+  .submit-section {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  #submit-btn {
+    width: 100%;
+    padding: 20px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.4), rgba(236,72,153,0.4));
+    border: 1px solid rgba(168,85,247,0.4);
+    color: #fff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px;
+    font-style: italic;
+    font-weight: 300;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(168,85,247,0.2), 0 8px 30px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    -webkit-appearance: none;
+    letter-spacing: 0.03em;
+  }
+  #submit-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 60px rgba(168,85,247,0.4);
+  }
+  #submit-btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+  }
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+  .submit-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.2);
+    text-align: center;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* ===== SUCCESS SCREEN ===== */
+  #success {
+    position: fixed;
+    inset: 0;
+    background: #0d0818;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #success.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  .success-orb {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #c084fc, #a855f7);
+    box-shadow: 0 0 80px rgba(168,85,247,0.6);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    animation: successPulse 3s ease-in-out infinite;
+  }
+  @keyframes successPulse {
+    0%,100%{transform:scale(1);box-shadow:0 0 80px rgba(168,85,247,0.6);}
+    50%{transform:scale(1.1);box-shadow:0 0 120px rgba(168,85,247,0.8);}
+  }
+  .success-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #fff;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+  .success-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.8;
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+  .success-close {
+    padding: 14px 36px;
+    border-radius: 50px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: rgba(255,255,255,0.6);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-appearance: none;
+  }
+
+  /* ===== MUSIC TOGGLE ===== */
+  #music-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    -webkit-appearance: none;
+  }
+  #music-toggle:active { transform: scale(0.9); }
+
+  /* ===== SCROLL REVEAL ===== */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ===== AMBIENT MUSIC ===== */
+  #ambient-audio { display: none; }
+
+  /* ===== MISC ===== */
+  .gradient-text {
+    background: linear-gradient(135deg, #c084fc, #f472b6, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-separator {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(168,85,247,0.2), transparent);
+    margin: 0 24px;
+    width: calc(100% - 48px);
+  }
+
+  /* Touch particle canvas */
+  #touch-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .music-note-anim {
+    animation: noteSpin 1s ease-in-out infinite alternate;
+  }
+  @keyframes noteSpin {
+    from { transform: rotate(-10deg); }
+    to { transform: rotate(10deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loader">
+  <div class="loader-orb"></div>
+  <div class="loader-text">preparing your world…</div>
+</div>
+
+<!-- Aurora Background -->
+<div class="aurora">
+  <div class="aurora-band"></div>
+  <div class="aurora-band"></div>
+  <div class="aurora-band"></div>
+</div>
+
+<!-- Star Canvas -->
+<canvas id="bg-canvas"></canvas>
+<!-- Touch Particle Canvas -->
+<canvas id="touch-canvas"></canvas>
+
+<!-- Music Toggle -->
+<button id="music-toggle" title="Toggle ambient music">🎵</button>
+
+<!-- Success Screen -->
+<div id="success">
+  <div class="success-orb">✦</div>
+  <div class="success-title">Your real self<br>deserves to exist.</div>
+  <div class="success-subtitle">Thank you for trusting this space.<br>What you've written is safe, and so are you.</div>
+  <button class="success-close" onclick="closeSuccess()">Return to your world</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-eyebrow">a space made only for you</div>
+    <h1 class="hero-title">
+      You were never born just to<br><em>survive exams.</em>
+    </h1>
+    <p class="hero-subtitle">Before the world decided your future…<br>who were you?</p>
+    <div class="fading-lines">
+      <div class="fading-line">"Maybe your dreams became silent."</div>
+      <div class="fading-line">"This space is only for you."</div>
+      <div class="fading-line">"You don't need to pretend here."</div>
+    </div>
+    <a href="#weight" class="enter-btn">
+      Enter Your World <span class="btn-arrow">↓</span>
+    </a>
+    <div class="scroll-hint">
+      <span>scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- SECTION 1: THE WEIGHT -->
+  <section id="weight">
+    <span class="section-num reveal">01 — the weight you carry</span>
+    <h2 class="section-title reveal">The weight<br>you carry<br><em>alone.</em></h2>
+    <div class="section-body reveal">
+      <p>Every morning you open a textbook you didn't choose. Every night you carry the silence of words you never got to say.</p>
+      <p>The pressure isn't just the syllabus. It lives in the way someone looks at you when you don't have an answer. In the unspoken fear of becoming a disappointment.</p>
+    </div>
+    <div class="weight-card reveal">
+      <div class="weight-quote">
+        "She's studying so hard." — but nobody asked if she was okay.
+      </div>
+      <div class="section-body">
+        <p>You've been strong for so long. For everyone else. But inside, something quieter in you is waiting — waiting to be heard, waiting to be real.</p>
+        <p>That tiredness you feel? It's not weakness. It's the exhaustion of becoming someone you never agreed to be.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: THE CHILD INSIDE -->
+  <section id="child">
+    <span class="section-num reveal">02 — the child inside you</span>
+    <h2 class="section-title reveal">The child<br>inside you<br><em>still remembers.</em></h2>
+    <div class="section-body reveal">
+      <p>Before NEET. Before rankings. Before fear of the future became your morning thought — there was a version of you who had a whole universe inside.</p>
+    </div>
+    <div class="float-elements">
+      <span class="float-el">✦</span>
+      <span class="float-el">🌸</span>
+      <span class="float-el">✎</span>
+      <span class="float-el">☽</span>
+      <span class="float-el">⋆</span>
+    </div>
+    <div class="section-body reveal">
+      <p>Maybe she drew things. Sang in the shower. Read books that had nothing to do with marks. Dreamed about places, people, careers that felt electric and alive.</p>
+      <p>She's still in there. She never left. She's just been waiting for you to come back.</p>
+    </div>
+    <div class="soft-divider reveal"></div>
+    <div class="section-body reveal">
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:19px;color:rgba(255,255,255,0.7);line-height:1.7;">
+        "Your imagination was never a distraction from your future. It was always the map to it."
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: QUESTIONS -->
+  <section id="questions">
+    <span class="section-num reveal">03 — if nobody judged you…</span>
+    <h2 class="section-title reveal">What if no one<br>was <em>watching?</em></h2>
+    <p class="section-body reveal" style="margin-bottom:0;">Take a breath. Read slowly. Let these land.</p>
+    <div class="question-container">
+      <div class="question-card">
+        <span class="question-number">01</span>
+        <div class="question-text">What life would make you feel genuinely, deeply happy?</div>
+      </div>
+      <div class="question-card">
+        <span class="question-number">02</span>
+        <div class="question-text">When do you feel most alive — truly, completely yourself?</div>
+      </div>
+      <div class="question-card">
+        <span class="question-number">03</span>
+        <div class="question-text">If you had to disappoint everyone to pursue one thing… what would it be?</div>
+      </div>
+      <div class="question-card">
+        <span class="question-number">04</span>
+        <div class="question-text">What do YOU want — not your parents, not society. You.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: SAFE -->
+  <section id="safe">
+    <div class="safe-orb reveal">✦</div>
+    <span class="section-num reveal">04 — you are safe here</span>
+    <h2 class="section-title reveal">You are<br><em>safe here.</em></h2>
+    <div class="section-body reveal" style="text-align:center;">
+      <p>No performance required. No marks to score. No future to justify. No version of 'enough' to prove.</p>
+      <p>This is the one place where who you are right now — the tired, the dreaming, the uncertain, the real — is exactly enough.</p>
+    </div>
+    <div class="safe-promises reveal">
+      <div class="safe-promise">
+        <span class="promise-icon">🌙</span>
+        <span>No judgment lives here.</span>
+      </div>
+      <div class="safe-promise">
+        <span class="promise-icon">🕊️</span>
+        <span>No expectations, no comparisons.</span>
+      </div>
+      <div class="safe-promise">
+        <span class="promise-icon">✦</span>
+        <span>Just you, exactly as you are.</span>
+      </div>
+      <div class="safe-promise">
+        <span class="promise-icon">🌸</span>
+        <span>Your dreams are not too much.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="journal">
+    <div class="journal-intro reveal">
+      <span class="section-num" style="text-align:center;display:block;">your secret diary</span>
+      <h2 class="section-title">Write your<br><em>real self.</em></h2>
+      <p>This is for no one else. Just you and the universe that made you.</p>
+    </div>
+
+    <div class="journal-container reveal">
+      <div class="journal-header">
+        <div class="journal-dot"></div>
+        <span class="journal-label">your world</span>
+        <span class="journal-date" id="today-date"></span>
+      </div>
+      <textarea
+        id="dream-text"
+        placeholder="If nobody forced you to become someone else… who would you become? What do you love? What do you dream of at 2am? What makes your heart actually feel something?&#10;&#10;Write it here. It's safe."
+      ></textarea>
+      <div class="journal-footer">
+        <span class="char-count" id="char-count">0 words</span>
+        <span class="journal-hint">your words, your world</span>
+      </div>
+    </div>
+
+    <div class="submit-section reveal">
+      <button id="submit-btn" onclick="handleSubmit(event)">
+        Let My Heart Speak ✦
+      </button>
+      <p class="submit-note">Your words are received with love, not judgment.</p>
+    </div>
+  </section>
+
+</div><!-- end #main -->
+
+<script>
+// ===== DATE =====
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+// ===== LOADER =====
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+  }, 2000);
+});
+
+// ===== STAR / PARTICLE CANVAS =====
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], fireflies = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Stars
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.2 + 0.2,
+      alpha: Math.random() * 0.6 + 0.1,
+      speed: Math.random() * 0.0003 + 0.0001,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  // Fireflies
+  for (let i = 0; i < 20; i++) {
+    fireflies.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 2 + 1,
+      alpha: Math.random() * 0.5 + 0.2,
+      phase: Math.random() * Math.PI * 2,
+      color: Math.random() > 0.5 ? '#c084fc' : '#f472b6'
+    });
+  }
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.01;
+
+    // Stars
+    stars.forEach(s => {
+      const flicker = Math.sin(t * s.speed * 1000 + s.phase) * 0.3;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.05, s.alpha + flicker);
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Fireflies
+    fireflies.forEach(f => {
+      f.x += f.vx;
+      f.y += f.vy;
+      if (f.x < 0) f.x = W;
+      if (f.x > W) f.x = 0;
+      if (f.y < 0) f.y = H;
+      if (f.y > H) f.y = 0;
+      const glow = Math.sin(t + f.phase) * 0.3;
+      const gr = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 8);
+      gr.addColorStop(0, f.color + 'aa');
+      gr.addColorStop(1, 'transparent');
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.1, f.alpha + glow);
+      ctx.fillStyle = gr;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r * 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = f.color;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== TOUCH PARTICLES =====
+(function() {
+  const canvas = document.getElementById('touch-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function spawnParticles(x, y) {
+    const colors = ['#c084fc', '#f472b6', '#93c5fd', '#fbbf24'];
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 2 + 0.5;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: Math.random() * 3 + 1,
+        alpha: 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 1
+      });
+    }
+  }
+
+  document.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    spawnParticles(t.clientX, t.clientY);
+  }, { passive: true });
+
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    spawnParticles(t.clientX, t.clientY);
+  }, { passive: true });
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.life -= 0.025;
+      p.alpha = p.life;
+      ctx.save();
+      ctx.globalAlpha = p.alpha * 0.8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== SCROLL REVEAL =====
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Question cards with stagger
+const qObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const cards = document.querySelectorAll('.question-card');
+      cards.forEach((card, i) => {
+        setTimeout(() => card.classList.add('visible'), i * 200);
+      });
+    }
+  });
+}, { threshold: 0.1 });
+const qSection = document.getElementById('questions');
+if (qSection) qObserver.observe(qSection);
+
+// ===== WORD COUNT =====
+const textarea = document.getElementById('dream-text');
+const charCount = document.getElementById('char-count');
+textarea.addEventListener('input', () => {
+  const text = textarea.value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  charCount.textContent = words + (words === 1 ? ' word' : ' words');
+});
+
+// ===== RIPPLE EFFECT =====
+document.getElementById('submit-btn').addEventListener('touchstart', function(e) {
+  const btn = this;
+  const rect = btn.getBoundingClientRect();
+  const x = e.touches[0].clientX - rect.left;
+  const y = e.touches[0].clientY - rect.top;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.left = x + 'px';
+  ripple.style.top = y + 'px';
+  ripple.style.width = ripple.style.height = '100px';
+  ripple.style.marginLeft = '-50px';
+  ripple.style.marginTop = '-50px';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+}, { passive: true });
+
+// ===== EMAILJS INIT =====
+emailjs.init("RtMRtrad5Dl6t2LPY");
+
+// ===== SUBMIT =====
+function handleSubmit(e) {
+  e.preventDefault();
+  const text = document.getElementById('dream-text').value.trim();
+  if (!text || text.length < 10) {
+    textarea.style.borderColor = 'rgba(236,72,153,0.6)';
+    textarea.placeholder = "Please write something — anything. This space is for you.";
+    setTimeout(() => { textarea.style.borderColor = ''; }, 2000);
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Sending… ✦';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+
+  emailjs.send("service_yyjh0x2", "template_kiqfbog", {
+    message: text,
+    time: new Date().toLocaleString()
+  }).then(() => {
+    document.getElementById('success').classList.add('visible');
+    btn.textContent = 'Let My Heart Speak ✦';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }).catch((err) => {
+    btn.textContent = 'Let My Heart Speak ✦';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+    console.error(err);
+  });
+}
+
+function launchSuccessParticles() {
+  const canvas = document.getElementById('touch-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const colors = ['#c084fc', '#f472b6', '#93c5fd', '#fbbf24', '#a78bfa'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const x = W / 2 + (Math.random() - 0.5) * 200;
+      const y = H / 2 + (Math.random() - 0.5) * 200;
+      for (let j = 0; j < 6; j++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1;
+        // handled by existing particle loop
+      }
+    }, i * 30);
+  }
+}
+
+function closeSuccess() {
+  document.getElementById('success').classList.remove('visible');
+}
+
+// ===== AMBIENT MUSIC =====
+let audioCtx = null, playing = false;
+const musicBtn = document.getElementById('music-toggle');
+
+function createAmbientMusic() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const notes = [220, 246.94, 261.63, 293.66, 329.63, 369.99];
+
+  function playNote(freq, time, dur) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const reverb = audioCtx.createConvolver();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, time);
+    gain.gain.setValueAtTime(0, time);
+    gain.gain.linearRampToValueAtTime(0.03, time + 0.5);
+    gain.gain.linearRampToValueAtTime(0, time + dur);
+    osc.start(time);
+    osc.stop(time + dur + 0.1);
+  }
+
+  function loop() {
+    if (!playing) return;
+    const now = audioCtx.currentTime;
+    const note = notes[Math.floor(Math.random() * notes.length)];
+    playNote(note, now, 4 + Math.random() * 4);
+    playNote(note * 1.5, now + 0.5, 3 + Math.random() * 3);
+    setTimeout(loop, 3000 + Math.random() * 2000);
+  }
+  loop();
+}
+
+musicBtn.addEventListener('click', () => {
+  if (!playing) {
+    playing = true;
+    musicBtn.innerHTML = '🔇';
+    try {
+      createAmbientMusic();
+    } catch(e) {}
+  } else {
+    playing = false;
+    musicBtn.innerHTML = '🎵';
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  }
+});
+
+// ===== SMOOTH SCROLL for enter button =====
+document.querySelector('.enter-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('weight').scrollIntoView({ behavior: 'smooth' });
+});
+</script>
+</body>
+</html>
